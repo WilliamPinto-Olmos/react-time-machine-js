@@ -1,1 +1,1 @@
-export * from './TimeMachine';
+export * from './TimeMachine.js';
