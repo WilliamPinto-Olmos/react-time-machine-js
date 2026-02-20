@@ -1,0 +1,35 @@
+{
+  "name": "react-time-machine-js",
+  "version": "1.0.0",
+  "description": "Ready-to-drop-in React dev widget for time-machine-js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "react",
+    "time-machine",
+    "testing",
+    "development",
+    "date-monkey-patch"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "time-machine-js": "file:../time-machine-core"
+  },
+  "peerDependencies": {
+    "react": ">=17",
+    "react-dom": ">=17"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
