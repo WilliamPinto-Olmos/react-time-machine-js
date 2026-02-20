@@ -10,9 +10,6 @@ It provides a minimal UI to control the global `Date.now()` patch, allowing you 
 npm install react-time-machine-js
 ```
 
-> [!NOTE]
-> `react` (>=17) is a peer dependency and must be provided by the consumer.
-
 ## Usage
 
 Render the `<TimeMachine />` component anywhere in your app. It is recommended to wrap it in a development guard.
