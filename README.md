@@ -11,7 +11,7 @@ npm install react-time-machine-js
 ```
 
 > [!NOTE]
-> `react` and `react-dom` (>=17) are peer dependencies and must be provided by the consumer.
+> `react` (>=17) is a peer dependency and must be provided by the consumer.
 
 ## Usage
 
