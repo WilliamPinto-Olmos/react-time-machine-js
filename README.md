@@ -7,7 +7,7 @@ It provides a minimal UI to control the global `Date.now()` patch, allowing you 
 ## Installation
 
 ```bash
-npm install react-time-machine-js time-machine-js
+npm install react-time-machine-js
 ```
 
 > [!NOTE]

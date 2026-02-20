@@ -18,8 +18,12 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WilliamPinto-Olmos/react-time-machine-js.git"
+  },
   "dependencies": {
-    "time-machine-js": "file:../time-machine-core"
+    "time-machine-js": "latest"
   },
   "peerDependencies": {
     "react": ">=17",
