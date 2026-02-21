@@ -1,35 +1,92 @@
-import React, { useState, useEffect } from 'react';
-import { travel, returnToPresent, getOffset, isActive, save, restore, TimeMachineMode, getMode } from 'time-machine-js';
-import './TimeMachine.css';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  travel,
+  returnToPresent,
+  isActive,
+  save,
+  restore,
+  getMode,
+} from "time-machine-js";
+import "./TimeMachine.css";
+
+import { TimeMachineContext } from "./context.js";
+import type { TimeMachineMode } from "./context.js";
+import type { TimeMachinePlugin } from "./plugins.js";
+import { formatDate, parseDate } from "./utils/dateFormat.js";
+import { StatusBar } from "./components/StatusBar.js";
+import { Panel } from "./components/Panel.js";
+import { Input } from "./components/Input.js";
+import { ModeToggle } from "./components/ModeToggle.js";
+import { ActivateButton } from "./components/ActivateButton.js";
+import { ResetButton } from "./components/ResetButton.js";
+import { Tabs } from "./components/Tabs.js";
 
 export interface TimeMachineProps {
   /**
-   * Position of the widget on the screen.
+   * Position of the floating widget on the screen.
+   * Ignored when `static` is true.
    * @default 'bottom-right'
    */
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   /**
    * The localStorage key used to persist the time machine state.
    * @default '__timeMachine__'
    */
   storageKey?: string;
   /**
+   * Plugins to register. Plugins with a `panel` appear as tabs;
+   * headless plugins only fire lifecycle hooks.
+   */
+  plugins?: TimeMachinePlugin[];
+  /**
+   * Render the widget as a static in-flow element instead of a fixed overlay.
+   * @default false
+   */
+  static?: boolean;
+  /**
+   * Format string for date display and input.
+   * Supports tokens: yyyy, MM, dd, HH, mm
+   * @default 'yyyy/MM/dd HH:mm'
+   */
+  dateFormat?: string;
+  /**
    * Callback fired when a new time/mode is activated.
    */
-  onTravel?: (timestamp: number, mode: 'flowing' | 'frozen') => void;
+  onTravel?: (timestamp: number, mode: "flowing" | "frozen") => void;
   /**
    * Callback fired when the time machine is reset.
    */
   onReturnToPresent?: () => void;
+  /**
+   * Children for compound-component usage.
+   * When omitted the default layout is rendered automatically.
+   */
+  children?: React.ReactNode;
 }
+
+const CORE_TAB = "Core";
+const DEFAULT_DATE_FORMAT = "yyyy/MM/dd HH:mm";
 
 let isRestored = false;
 
-export const TimeMachine: React.FC<TimeMachineProps> = ({
-  position = 'bottom-right',
-  storageKey = '__timeMachine__',
+type TimeMachineComposite = React.FC<TimeMachineProps> & {
+  StatusBar: typeof StatusBar;
+  Panel: typeof Panel;
+  Input: typeof Input;
+  ModeToggle: typeof ModeToggle;
+  ActivateButton: typeof ActivateButton;
+  ResetButton: typeof ResetButton;
+};
+
+export const TimeMachine: TimeMachineComposite = ({
+  position = "bottom-right",
+  storageKey = "__timeMachine__",
+  plugins = [],
+  static: isStatic = false,
+  dateFormat = DEFAULT_DATE_FORMAT,
   onTravel,
   onReturnToPresent,
+  children,
 }) => {
   if (!isRestored) {
     restore(storageKey);
@@ -39,18 +96,19 @@ export const TimeMachine: React.FC<TimeMachineProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [active, setActive] = useState(isActive());
   const [displayTime, setDisplayTime] = useState(Date.now());
-  const [mode, setMode] = useState<TimeMachineMode>('flowing');
-  const [inputTime, setInputTime] = useState('');
+  const [mode, setMode] = useState<TimeMachineMode>("flowing");
+  const [inputTime, setInputTime] = useState("");
+  const [activeTab, setActiveTab] = useState(CORE_TAB);
 
   useEffect(() => {
     const update = () => {
       setActive(isActive());
       setDisplayTime(Date.now());
+      plugins.forEach((p) => p.onTick?.(Date.now()));
     };
-
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [plugins]);
 
   useEffect(() => {
     return () => {
@@ -58,90 +116,87 @@ export const TimeMachine: React.FC<TimeMachineProps> = ({
     };
   }, []);
 
-  const handleToggleExpand = () => {
-    if (!isExpanded) {
-      const now = new Date();
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      const localStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-      setInputTime(localStr);
-      const currentMode = getMode();
-      if (currentMode) {
-        setMode(currentMode);
+  const handleToggleExpand = useCallback(() => {
+    setIsExpanded((prev) => {
+      if (!prev) {
+        setInputTime(formatDate(Date.now(), dateFormat));
+        const currentMode = getMode();
+        if (currentMode) setMode(currentMode as TimeMachineMode);
       }
-    }
-    setIsExpanded(!isExpanded);
-  };
+      return !prev;
+    });
+  }, [dateFormat]);
 
-  const handleActivate = () => {
-    const timestamp = new Date(inputTime).getTime();
+  const handleActivate = useCallback(() => {
+    const timestamp = parseDate(inputTime, dateFormat);
     if (isNaN(timestamp)) return;
-
     travel(timestamp, mode);
     save(storageKey);
     setActive(true);
-    if (onTravel) onTravel(timestamp, mode);
-  };
+    onTravel?.(timestamp, mode);
+    plugins.forEach((p) => p.onTravel?.(timestamp, mode));
+  }, [inputTime, dateFormat, mode, storageKey, onTravel, plugins]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     returnToPresent();
     localStorage.removeItem(storageKey);
     setActive(false);
-    if (onReturnToPresent) onReturnToPresent();
+    setActiveTab(CORE_TAB);
+    onReturnToPresent?.();
+    plugins.forEach((p) => p.onReturnToPresent?.());
+  }, [storageKey, onReturnToPresent, plugins]);
+
+  const containerClass = [
+    "time-machine-widget",
+    isStatic ? "time-machine-static" : `position-${position}`,
+  ].join(" ");
+
+  const ctxValue = {
+    active,
+    displayTime,
+    mode,
+    inputTime,
+    isExpanded,
+    plugins,
+    activeTab,
+    dateFormat,
+    setInputTime,
+    setMode,
+    setActiveTab,
+    handleToggleExpand,
+    handleActivate,
+    handleReset,
   };
 
-  const getStatusText = () => {
-    if (!active) return '● Real time';
-    const dateStr = new Date(displayTime).toLocaleString();
-    return `● ${mode.charAt(0).toUpperCase() + mode.slice(1)}: ${dateStr}`;
-  };
+  const defaultLayout = (
+    <>
+      <StatusBar />
+      <Panel>
+        <Tabs />
+        {activeTab === CORE_TAB ? (
+          <>
+            <Input />
+            <ModeToggle />
+            <ActivateButton />
+            <ResetButton />
+          </>
+        ) : (
+          plugins.find((p) => p.name === activeTab)?.panel?.()
+        )}
+      </Panel>
+    </>
+  );
 
   return (
-    <div className={`time-machine-widget position-${position}`}>
-      <div className="time-machine-status-bar" onClick={handleToggleExpand}>
-        <span className={active ? 'time-machine-status-bar-active' : 'time-machine-status-bar-inactive'}>
-          {getStatusText()}
-        </span>
-      </div>
-      
-      <div className={`time-machine-panel ${!isExpanded ? 'time-machine-panel-hidden' : ''}`}>
-        <div className="time-machine-input-group">
-          <label>Target Date/Time:</label>
-          <input 
-            type="datetime-local" 
-            className="time-machine-input"
-            value={inputTime} 
-            onChange={(e) => setInputTime(e.target.value)}
-          />
-        </div>
-
-        <div className="time-machine-input-group">
-          <label>Mode:</label>
-          <div className="time-machine-toggle">
-            <div 
-              className={`time-machine-toggle-option ${mode === 'flowing' ? 'time-machine-toggle-option-active' : ''}`}
-              onClick={() => setMode('flowing')}
-            >
-              Flowing
-            </div>
-            <div 
-              className={`time-machine-toggle-option ${mode === 'frozen' ? 'time-machine-toggle-option-active' : ''}`}
-              onClick={() => setMode('frozen')}
-            >
-              Frozen
-            </div>
-          </div>
-        </div>
-
-        <button className="time-machine-button" onClick={handleActivate}>
-          Activate
-        </button>
-
-        {active && (
-          <button className="time-machine-button time-machine-button-reset" onClick={handleReset}>
-            Reset to Present
-          </button>
-        )}
-      </div>
-    </div>
+    <TimeMachineContext.Provider value={ctxValue}>
+      <div className={containerClass}>{children ?? defaultLayout}</div>
+    </TimeMachineContext.Provider>
   );
 };
+
+TimeMachine.StatusBar = StatusBar;
+TimeMachine.Panel = Panel;
+TimeMachine.Input = Input;
+TimeMachine.ModeToggle = ModeToggle;
+TimeMachine.ActivateButton = ActivateButton;
+TimeMachine.ResetButton = ResetButton;
