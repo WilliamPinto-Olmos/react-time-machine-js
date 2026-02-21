@@ -1,6 +1,6 @@
 {
   "name": "react-time-machine-js",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Ready-to-drop-in React dev widget for time-machine-js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
