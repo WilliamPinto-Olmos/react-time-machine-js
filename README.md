@@ -30,8 +30,9 @@ function App() {
 | :------------------ | :------------------------------------------------------------- | :------------------- | :------------------------------------------------------------------------- |
 | `position`          | `'bottom-right' \| 'bottom-left' \| 'top-right' \| 'top-left'` | `'bottom-right'`     | Floating widget corner. Ignored when `static` is set.                      |
 | `static`            | `boolean`                                                      | `false`              | Render as an in-flow element instead of a fixed overlay.                   |
-| `storageKey`        | `string`                                                       | `'__timeMachine__'`  | `localStorage` key for state persistence.                                  |
+| `storageKey`        | `string`                                                       | `'__timeMachine__'`  | Key used for `store` state persistence.                                    |
 | `dateFormat`        | `string`                                                       | `'yyyy/MM/dd HH:mm'` | Format for date display and input. Tokens: `yyyy`, `MM`, `dd`, `HH`, `mm`. |
+| `translations`      | `Partial<TimeMachineTranslations>`                             | —                    | Override default English widget texts seamlessly.                          |
 | `plugins`           | `TimeMachinePlugin[]`                                          | `[]`                 | Plugins to register (see below).                                           |
 | `onTravel`          | `(timestamp: number, mode: 'flowing' \| 'frozen') => void`     | —                    | Fired on activation.                                                       |
 | `onReturnToPresent` | `() => void`                                                   | —                    | Fired on reset.                                                            |
@@ -168,9 +169,31 @@ Access widget state from any component rendered inside `<TimeMachine>`:
 import { useTimeMachine } from "react-time-machine-js";
 
 function MyPanel() {
-  const { active, displayTime, handleReset } = useTimeMachine();
+  const { active, displayTime, handleReset, store } = useTimeMachine();
+
+  const saveState = () => store.set("my-state", "foo");
+
   return <div>{active ? new Date(displayTime).toISOString() : "idle"}</div>;
 }
+```
+
+---
+
+## Store API
+
+The package exposes a `store` object to safely abstract `localStorage` operations.
+
+When accessed securely via `useTimeMachine().store`, the `storageKey` prefix is automatically prepended to prevent collisions with other local storage data.
+
+```typescript
+import { useTimeMachine, store } from "react-time-machine-js";
+
+// Accessing the scoped store from within the TimeMachine context
+const { store: scopedStore } = useTimeMachine();
+scopedStore.set("my-plugin-data", { key: "value" });
+
+// Accessing the global store anywhere else
+store.set("app-data", "value");
 ```
 
 ---

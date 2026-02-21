@@ -2,6 +2,9 @@ export type { TimeMachineProps } from "./TimeMachine.js";
 export type { TimeMachinePlugin } from "./plugins.js";
 export type { SlotProps } from "./Slot.js";
 export type { TimeMachineContextValue, TimeMachineMode } from "./context.js";
+export type { Store } from "./utils/store.js";
+
+export { store } from "./utils/store.js";
 
 export { TimeMachine } from "./TimeMachine.js";
 export { Slot } from "./Slot.js";

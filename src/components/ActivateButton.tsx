@@ -12,7 +12,7 @@ export const ActivateButton: React.FC<ActivateButtonProps> = ({
   asChild = false,
   children,
 }) => {
-  const { handleActivate } = useTimeMachine();
+  const { handleActivate, translations } = useTimeMachine();
 
   if (asChild) {
     return (
@@ -27,7 +27,7 @@ export const ActivateButton: React.FC<ActivateButtonProps> = ({
 
   return (
     <button className="time-machine-button" onClick={handleActivate}>
-      {children ?? "Activate"}
+      {children ?? translations.activate}
     </button>
   );
 };

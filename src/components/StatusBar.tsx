@@ -3,13 +3,21 @@ import { useTimeMachine } from "../context.js";
 import { formatDate } from "../utils/dateFormat.js";
 
 export const StatusBar: React.FC = () => {
-  const { active, displayTime, mode, handleToggleExpand, dateFormat } =
-    useTimeMachine();
+  const {
+    active,
+    displayTime,
+    mode,
+    handleToggleExpand,
+    dateFormat,
+    translations,
+  } = useTimeMachine();
 
   const getStatusText = () => {
-    if (!active) return "● Real time";
+    if (!active) return `● ${translations.realTime}`;
     const dateStr = formatDate(displayTime, dateFormat);
-    return `● ${mode.charAt(0).toUpperCase() + mode.slice(1)}: ${dateStr}`;
+    const modeStr =
+      mode === "flowing" ? translations.flowing : translations.frozen;
+    return `● ${modeStr}: ${dateStr}`;
   };
 
   return (

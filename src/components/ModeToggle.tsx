@@ -5,11 +5,11 @@ import type { TimeMachineMode } from "../context.js";
 const MODES: TimeMachineMode[] = ["flowing", "frozen"];
 
 export const ModeToggle: React.FC = () => {
-  const { mode, setMode } = useTimeMachine();
+  const { mode, setMode, translations } = useTimeMachine();
 
   return (
     <div className="time-machine-input-group">
-      <label>Mode:</label>
+      <label>{translations.mode}</label>
       <div className="time-machine-toggle">
         {MODES.map((m) => (
           <div
@@ -17,7 +17,7 @@ export const ModeToggle: React.FC = () => {
             className={`time-machine-toggle-option ${mode === m ? "time-machine-toggle-option-active" : ""}`}
             onClick={() => setMode(m)}
           >
-            {m.charAt(0).toUpperCase() + m.slice(1)}
+            {m === "flowing" ? translations.flowing : translations.frozen}
           </div>
         ))}
       </div>

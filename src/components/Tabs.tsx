@@ -2,13 +2,16 @@ import React from "react";
 import { useTimeMachine } from "../context.js";
 
 export const Tabs: React.FC = () => {
-  const { plugins, activeTab, setActiveTab } = useTimeMachine();
+  const { plugins, activeTab, setActiveTab, translations } = useTimeMachine();
 
   // Only plugins that provide a panel become tabs
   const panelPlugins = plugins.filter((p) => p.panel);
   if (panelPlugins.length === 0) return null;
 
-  const tabs = [{ name: "Core", icon: undefined }, ...panelPlugins];
+  const tabs = [
+    { name: "Core", displayName: translations.coreTab, icon: undefined },
+    ...panelPlugins.map((p) => ({ ...p, displayName: p.name })),
+  ];
 
   return (
     <div className="time-machine-tabs">
@@ -21,7 +24,7 @@ export const Tabs: React.FC = () => {
           {tab.icon ? (
             <span className="time-machine-tab-icon">{tab.icon}</span>
           ) : null}
-          {tab.name}
+          {tab.displayName}
         </button>
       ))}
     </div>

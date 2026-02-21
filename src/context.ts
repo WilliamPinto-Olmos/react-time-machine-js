@@ -1,7 +1,18 @@
 import React from "react";
 import type { TimeMachinePlugin } from "./plugins.js";
+import type { Store } from "./utils/store.js";
 
 export type TimeMachineMode = "flowing" | "frozen";
+
+export interface TimeMachineTranslations {
+  realTime: string;
+  flowing: string;
+  frozen: string;
+  mode: string;
+  activate: string;
+  returnToPresent: string;
+  coreTab: string;
+}
 
 export interface TimeMachineContextValue {
   active: boolean;
@@ -12,6 +23,8 @@ export interface TimeMachineContextValue {
   plugins: TimeMachinePlugin[];
   activeTab: string;
   dateFormat: string;
+  store: Store;
+  translations: TimeMachineTranslations;
   setInputTime: (v: string) => void;
   setMode: (mode: TimeMachineMode) => void;
   setActiveTab: (tab: string) => void;

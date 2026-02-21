@@ -13,6 +13,7 @@ import { TimeMachineContext } from "./context.js";
 import type { TimeMachineMode } from "./context.js";
 import type { TimeMachinePlugin } from "./plugins.js";
 import { formatDate, parseDate } from "./utils/dateFormat.js";
+import { store } from "./utils/store.js";
 import { StatusBar } from "./components/StatusBar.js";
 import { Panel } from "./components/Panel.js";
 import { Input } from "./components/Input.js";
@@ -58,6 +59,10 @@ export interface TimeMachineProps {
    */
   onReturnToPresent?: () => void;
   /**
+   * Translations for all the text in the widget.
+   */
+  translations?: Partial<import("./context.js").TimeMachineTranslations>;
+  /**
    * Children for compound-component usage.
    * When omitted the default layout is rendered automatically.
    */
@@ -66,6 +71,17 @@ export interface TimeMachineProps {
 
 const CORE_TAB = "Core";
 const DEFAULT_DATE_FORMAT = "yyyy/MM/dd HH:mm";
+
+export const DEFAULT_TRANSLATIONS: import("./context.js").TimeMachineTranslations =
+  {
+    realTime: "Real time",
+    flowing: "Flowing",
+    frozen: "Frozen",
+    mode: "Mode:",
+    activate: "Activate",
+    returnToPresent: "Reset to Present",
+    coreTab: "Core",
+  };
 
 let isRestored = false;
 
@@ -84,6 +100,7 @@ export const TimeMachine: TimeMachineComposite = ({
   plugins = [],
   static: isStatic = false,
   dateFormat = DEFAULT_DATE_FORMAT,
+  translations,
   onTravel,
   onReturnToPresent,
   children,
@@ -139,7 +156,7 @@ export const TimeMachine: TimeMachineComposite = ({
 
   const handleReset = useCallback(() => {
     returnToPresent();
-    localStorage.removeItem(storageKey);
+    store.remove(storageKey);
     setActive(false);
     setActiveTab(CORE_TAB);
     onReturnToPresent?.();
@@ -160,6 +177,8 @@ export const TimeMachine: TimeMachineComposite = ({
     plugins,
     activeTab,
     dateFormat,
+    store,
+    translations: { ...DEFAULT_TRANSLATIONS, ...translations },
     setInputTime,
     setMode,
     setActiveTab,

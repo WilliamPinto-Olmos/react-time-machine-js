@@ -12,7 +12,7 @@ export const ResetButton: React.FC<ResetButtonProps> = ({
   asChild = false,
   children,
 }) => {
-  const { active, handleReset } = useTimeMachine();
+  const { active, handleReset, translations } = useTimeMachine();
 
   if (!active) return null;
 
@@ -32,7 +32,7 @@ export const ResetButton: React.FC<ResetButtonProps> = ({
       className="time-machine-button time-machine-button-reset"
       onClick={handleReset}
     >
-      {children ?? "Return to Present"}
+      {children ?? translations.returnToPresent}
     </button>
   );
 };
